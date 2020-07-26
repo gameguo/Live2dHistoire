@@ -23,6 +23,14 @@
         {
             "selector": ".searchbox",
             "text": ["在找什么东西呢，需要帮忙吗？"]
+        },
+        {
+            "selector": "#resetButton",
+            "text": ["重置位置和缩放"]
+        },
+        {
+            "selector": "#scaleBtn",
+            "text": ["拖拽缩放"]
         }
     ],
     "click": [

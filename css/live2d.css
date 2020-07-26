@@ -193,6 +193,12 @@
 	background-repeat:no-repeat;
 	background-size:30px;
 }
+.live_ico_item.type_reset{
+	background-image:url(../images/reset.png);
+}
+.live_ico_item.type_scale{
+	background-image:url(../images/scale.png);
+}
 .live_ico_item.type_talk{
 	background-image:url(../images/talk.png);
 }

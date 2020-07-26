@@ -217,6 +217,24 @@ function hideMessage(timeout){
 }
 	
 function initLive2d (){
+	var downEnentName = isMobile ? "touchstart" : "mousedown";
+	var moveEnentName = isMobile ? "touchmove" : "mousemove";
+	var upEnentName = isMobile ? "touchend" : "mouseup";
+	var isStartScale = false;
+	var scale = localStorage.getItem("live2scale"); // 获取缩放
+	if (scale==null){
+		scale = 1;
+	}
+	function getEvent() {
+		return window.event || arguments.callee.caller.arguments[0];
+	}
+	function getEventX(ent){
+		return isMobile ? ent.changedTouches[0].clientX : ent.clientX;
+	}
+	function getEventY(ent){
+		return isMobile ? ent.changedTouches[0].clientY : ent.clientY;
+	}
+
 	$('#hideButton').on('click', function(){
 		if(AIFadeFlag){
 			return false;
@@ -229,6 +247,86 @@ function initLive2d (){
 				AIFadeFlag = false;
 			},300);
 		}
+	});
+	function clampScale(scale){
+		return scale < 0.5 ? 0.5 : (scale > 5) ? 5 : scale;
+	}
+	function clampFontSize(size){
+		return size < 10 ? 10 : (size > 30) ? 30 : size;
+	}
+
+	var scaleLandlord = $('#landlord');
+	var scaleMessage = $('.message');
+	var scaleLive2d = $('#live2d');
+	var scaleAIuserName = $('#AIuserName');
+	var scaleAIuserText = $('#AIuserText');
+	var scaleSendBtn = $('.live_talk_input_body .live_talk_send_btn');
+	function setScale(scale){
+		// 根据初始缩放计算初始值
+		var width = 250 * scale;
+		var height = 280 * scale;
+		var scaleX = width / 250;
+		var fontsize = clampFontSize(13 * scaleX);  // 13
+		scaleLandlord.css({
+			'width' : width + 'px',
+			'height' : height + 'px',
+		});
+		scaleLive2d.css({
+			'width' : width + 'px',
+			'height' : height + 'px',
+		});
+		scaleMessage.css('font-size', fontsize + 'px');
+		scaleAIuserName.css('font-size', fontsize + 'px');
+		scaleAIuserText.css('font-size', fontsize + 'px');
+		scaleSendBtn.css('font-size', fontsize + 'px');
+	}
+	function getScale(distance){
+		var height = scaleLandlord.css('height');
+		height = parseInt(height) + distance;
+		return height / 280;
+	}
+	setScale(scale);
+	function scaleMove(){
+		var ent = getEvent();
+		var clientY = getEventY(ent);
+		var distanceY = downY - clientY;
+		scale = clampScale(getScale(distanceY));
+		setScale(scale);
+		downY = clientY;
+	}
+	function scaleUp(){
+		isStartScale = false;
+		$(document).unbind(moveEnentName,scaleMove);
+		$(document).unbind(upEnentName,scaleUp);
+		if (isMobile){
+			document.body.style.overflow='';//出现滚动条
+		}
+		scale = clampScale(scale);
+		setScale(scale);
+		localStorage.setItem("live2scale", scale);
+	}
+	$('#scaleBtn').on(downEnentName,function(){
+		isStartScale = true;
+		$(document).on(moveEnentName, scaleMove)
+		$(document).on(upEnentName, scaleUp);
+		if (isMobile){
+			document.body.style.overflow='hidden';
+		}
+		var ent = getEvent();
+		moveable = true;
+		downX = getEventX(ent);
+		downY = getEventY(ent);
+	});
+	$('#resetButton').on('click',function(){
+		scale = 1;
+		setScale(scale);
+		localStorage.setItem("live2scale", scale);
+		var landL = '5';
+		var landB = '0';
+		sessionStorage.setItem("historywidth", landL);
+		sessionStorage.setItem("historyheight", landB);
+		$('#landlord').css('left',landL + 'px');
+		$('#landlord').css('bottom',landB + 'px');
 	});
 	$('#open_live2d').on('click', function(){
 		if(AIFadeFlag){
@@ -381,32 +479,20 @@ function initLive2d (){
 	var landL = sessionStorage.getItem("historywidth");
 	var landB = sessionStorage.getItem("historyheight");
 	if(landL == null || landB ==null){
-		landL = '5px'
-		landB = '0px'
+		landL = '5'
+		landB = '0'
 	}
-	$('#landlord').css('left',landL+'px');
+	$('#landlord').css('left',landL + 'px');
 	$('#landlord').css('bottom',landB + 'px');
 	//移动
-	function getEvent() {
-		return window.event || arguments.callee.caller.arguments[0];
-	}
-	function getEventX(ent){
-		return isMobile ? ent.changedTouches[0].clientX : ent.clientX;
-	}
-	function getEventY(ent){
-		return isMobile ? ent.changedTouches[0].clientY : ent.clientY;
-	}
 	var smcc = document.getElementById("landlord");
 	var downX = 0;
 	var downY = 0;
 	var moveBottom = 0;
 	var moveLeft = 0;
 	var moveable = false;
-	var downEnentName = isMobile ? "touchstart" : "mousedown";
-	var moveEnentName = isMobile ? "touchmove" : "mousemove";
-	var upEnentName = isMobile ? "touchend" : "mouseup";
-
 	function moveDown(){
+		if(isStartScale)return;
 		$(document).on(moveEnentName, move)
 		$(document).on(upEnentName, moveUp);
 		if (isMobile){
